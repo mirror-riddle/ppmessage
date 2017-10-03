@@ -44,13 +44,13 @@ def _get_config():
     _f.close()
     if _r == None or len(_r) == 0:
         return None
-        
+
     return json.loads(_r)
 
 def _dump_config(_config):
     _config_file = _CONFIG_PATH
     _f = open(_config_file, "w")
-    _r = _f.write(json.dumps(_config))
+    _r = _f.write(json.dumps(_config, indent=True, sort_keys=True))
     _f.close()
     return
 
