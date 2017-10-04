@@ -7,7 +7,7 @@ ppmessageModule.factory('yvNav', [
     "yvConstants",
 function ($ionicHistory, $timeout, $state, yvSys, yvUser, yvConstants) {
 
-    return {        
+    return {
         go_back: function (_depth) {
             var historyId = $ionicHistory.currentHistoryId(),
             history = $ionicHistory.viewHistory().histories[historyId],
@@ -63,7 +63,7 @@ function ($ionicHistory, $timeout, $state, yvSys, yvUser, yvConstants) {
             if (!user.email) {
                 return this.login_no_user();
             }
-            
+
             $state.go("noapp.login-with-user", {
                 "icon": user.icon,
                 "email": user.email,
@@ -81,9 +81,10 @@ function ($ionicHistory, $timeout, $state, yvSys, yvUser, yvConstants) {
                 $state.go(state);
             });
         },
-        
+
         exit_app: function (should_reset) {
             this.disable_next();
+            this.clear();
             if (should_reset) {
                 $state.go("main-with-logo");
                 return;
