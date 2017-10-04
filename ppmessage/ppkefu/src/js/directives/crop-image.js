@@ -6,7 +6,7 @@ function (yvLink, yvConstants) {
     /* This directive is intended to work in pc-browser, mobile-browser, electron, NOT INCLUDING mobile-native !
      * It is used together with controller: changeAvatarCtrl.
      */
-    
+
     function _link($scope, $element, $attrs) {
         var jcrop_api = null;
         var thumbnail = null;
@@ -31,36 +31,36 @@ function (yvLink, yvConstants) {
             restore(callback);
         });
 
-        
+
         $scope.$on("event:crop-avatar", function (event, callback) {
             cropAvatar(callback);
         });
 
-        
+
         // CR: use jcrop_api.setImage rather than jcrop_api.destroy
         $scope.$watch("imgSrc", function (new_src, old_src) {
             if (!new_src) {
                 return;
             }
-            if (jcrop_api) {
-                jcrop_api.destroy();
-            }
             img.attr("src", new_src);
             initJcrop();
         });
 
-        
+
         function setCurrentAvatar() {
             $scope.userIcon = yvLink.current_user_avatar();
         }
-        
-        
+
+
         function setDirty(bool) {
             $scope.$emit("event:set-dirty", !!bool);
         }
 
-        
+
         function initJcrop() {
+            if (jcrop_api) {
+                jcrop_api.destroy();
+            }
             img.Jcrop(options, function () {
                 jcrop_api = this;
                 thumbnail = this.initComponent("Thumbnailer", thumb_size);
@@ -68,7 +68,7 @@ function (yvLink, yvConstants) {
             });
         }
 
-        
+
         function dataURLtoBlob(dataurl) {
             var arr = dataurl.split(',');
             var mime = arr[0].match(/:(.*?);/)[1];
@@ -84,32 +84,28 @@ function (yvLink, yvConstants) {
             return {
                 x: Math.round(selection.x / scale.x),
                 y: Math.round(selection.y / scale.y),
-                x2: Math.round(selection.x2 / scale.x),
-                y2: Math.round(selection.y2 / scale.y),
                 w: Math.round(selection.w / scale.x),
-                h: Math.round(selection.h / scale.y),
+                h: Math.round(selection.h / scale.y)
             };
         }
-        
-        
+
+
         function cropAvatar (callback) {
             if (!jcrop_api) {
                 return;
             }
-            var canvas = jcrop_api.container.context;
             var selection = jcrop_api.getSelection();
             var container_size = jcrop_api.getContainerSize();
             var scale = {
-                x: container_size[0] / canvas.width,
-                y: container_size[1] / canvas.height
+                x: container_size[0] / img[0].naturalWidth,
+                y: container_size[1] / img[0].naturalHeight
             };
             var s = getTrueSelection(selection, scale);
-            
             var avatar = document.createElement("canvas");
             avatar.width = thumb_width;
             avatar.height = thumb_height;
             var context = avatar.getContext("2d");
-            context.drawImage(canvas, s.x, s.y, s.w, s.h, 0, 0, thumb_width, thumb_height);
+            context.drawImage(img[0], s.x, s.y, s.w, s.h, 0, 0, thumb_width, thumb_height);
 
             var data_url = avatar.toDataURL();
             var blob = dataURLtoBlob(data_url);
@@ -121,7 +117,7 @@ function (yvLink, yvConstants) {
             callback && callback(blob);
         }
 
-        
+
         function restore(callback) {
             if (!jcrop_api) {
                 return;
@@ -133,9 +129,9 @@ function (yvLink, yvConstants) {
             img.attr("src", null);
             callback && callback();
         };
-        
+
     }
-    
+
     return {
         restrict: "E",
         replace: true,
