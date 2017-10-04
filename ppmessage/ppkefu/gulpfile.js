@@ -37,21 +37,15 @@ gulp.task("watch", ["default"], function() {
     gulp.watch(buildConfig.html, ["template-cache"]);
 });
 
-function generate_config(done) {
-    childProcess.exec("python ../config/config.py");
-    done();
-}
-
 function generate_template_cache(done) {
     var src = buildConfig.html;
     var dest =  buildConfig.buildJsPath;
 
     gulp.src(src)
-        .pipe(templateCache("templates.js", {
+        .pipe(templateCache("template-cache.js", {
             root: "templates",
             module: "ppmessage"
         }))
-        .pipe(gulp.dest(buildConfig.halfBuildPath))
         .pipe(uglify())
         .on("error", function(e) {
             console.log(e);
@@ -67,9 +61,7 @@ function generate_js(done) {
     var dest = buildConfig.buildJsPath;
 
     gulp.src(src)
-        .pipe(concat("ppkefu-template.js"))
-        .pipe(replace("{{version}}", get_ppkefu_version()))
-        .pipe(gulp.dest(buildConfig.halfBuildPath))
+        .pipe(concat("ppkefu.js"))
         .pipe(uglify())
         .on("error", function(e) {
             console.log(e);
@@ -77,18 +69,15 @@ function generate_js(done) {
         })
         .pipe(rename({"extname": ".min.js"}))
         .pipe(gulp.dest(dest))
-        .on("end", function() {
-            generate_config(done);
-        });
+        .on("end", done);
 }
 
 function generate_scss(done) {
-    var src = "../src/scss/ionic.ppmessage.scss";
+    var src = "./src/scss/ionic.ppmessage.scss";
     var dest = buildConfig.buildCssPath;
 
     gulp.src(src)
-        .pipe(scss({includePaths: ["../../resource/share/ppkefu/bower_components/ionic/scss"]}))
-        .pipe(gulp.dest(buildConfig.halfBuildPath))
+        .pipe(scss({includePaths: ["./bower_components/ionic/scss"]}))
         .pipe(cleanCss({ keepSpecialComments: 0 }))
         .pipe(rename({ extname: ".min.css" }))
         .pipe(gulp.dest(dest))
@@ -101,7 +90,6 @@ function generate_lib_js(done) {
 
     gulp.src(src)
         .pipe(concat("lib.js"))
-        .pipe(gulp.dest(buildConfig.halfBuildPath))
         .pipe(uglify())
         .on("error", function(e) {
             console.log(e);
@@ -118,7 +106,6 @@ function generate_lib_css(done) {
 
     gulp.src(src)
         .pipe(concat("lib.css"))
-        .pipe(gulp.dest(buildConfig.halfBuildPath))
         .pipe(cleanCss({ keepSpecialComments: 0 }))
         .pipe(rename({ extname: ".min.css" }))
         .pipe(gulp.dest(dest))
@@ -126,7 +113,7 @@ function generate_lib_css(done) {
 }
 
 function copy_ionic_fonts(done) {
-    var src = "../../resource/share/ppkefu/bower_components/ionic/fonts/*";
+    var src = "./bower_components/ionic/release/fonts/*";
     var dest = buildConfig.buildFontPath;
 
     gulp.src(src)
@@ -135,7 +122,7 @@ function copy_ionic_fonts(done) {
 }
 
 function copy_jcrop_gif(done) {
-    var src =  "../../resource/share/ppkefu/bower_components/Jcrop/css/Jcrop.gif";
+    var src =  "./bower_components/Jcrop/css/Jcrop.gif";
     var dest =  buildConfig.buildCssPath;
 
     gulp.src(src)

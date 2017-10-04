@@ -33,7 +33,7 @@ import os
 import json
 import uuid
 import redis
-import errno    
+import errno
 import logging
 import traceback
 
@@ -80,9 +80,9 @@ class PPConfigHandler(tornado.web.RequestHandler):
         if _get_config() != None and _get_config().get("config_status") == CONFIG_STATUS.RESTART:
             self.redirect("/ppkefu/")
             return
-        
+
         _dir = os.path.dirname(os.path.abspath(__file__))
-        _html_path = _dir + "/../resource/html/ppconfig-index.html" 
+        _html_path = _dir + "/../resource/html/ppconfig-index.html"
         _html_file = open(_html_path, "rb")
         _html = _html_file.read()
         _html_file.close()
@@ -98,12 +98,12 @@ class ConfigStatusHandler(tornado.web.RequestHandler):
         if _status["status"] == CONFIG_STATUS.RESTART:
             logging.error("should not request config for PPMessage already configed.")
             return
-        
+
         self.write(_status)
         self.flush()
         return
 
-class ServerHandler(tornado.web.RequestHandler):    
+class ServerHandler(tornado.web.RequestHandler):
     def _dump_server_config(self, _server_config):
         """
         server config is first
@@ -120,14 +120,14 @@ class ServerHandler(tornado.web.RequestHandler):
 
         if len(_host) == 1:
             _server_config.update({"name": _host[0]})
-            if _servcer_config.get("ssl") == "on":
+            if _server_config.get("ssl") == "on":
                 _server_config.update({"port": 443})
             else:
                 _server_config.update({"port": 80})
-                
+
         if len(_host) == 2:
             _server_config.update({"name": _host[0], "port": int(_host[1])})
-        
+
         _config = {
             "config_status": CONFIG_STATUS.SERVER,
             "server": _server_config
@@ -143,16 +143,16 @@ class ServerHandler(tornado.web.RequestHandler):
             _generic_store = "/usr/local/opt/ppmessage/generic"
         if _identicon_store == None:
             _identicon_store = "/usr/local/opt/ppmessage/identicon"
-            
+
         try:
             _mkdir_p(_generic_store)
             _mkdir_p(_identicon_store)
         except:
             return False
-        
+
         return True
-    
-    def post(self, id=None):        
+
+    def post(self, id=None):
         _request = json.loads(self.request.body.decode("utf-8"))
 
         _config = _get_config()
@@ -169,30 +169,30 @@ class ServerHandler(tornado.web.RequestHandler):
         if not self._create_server_stores(_server):
             logging.error("config server not run for wrong request: %s." % _server)
             return _return(self, -1)
-        
+
         self._dump_server_config(_server)
         return _return(self, 0)
 
 class DatabaseHandler(tornado.web.RequestHandler):
-    
+
     def _dump_db_config(self, _db_config):
         _config = _get_config()
         _config["config_status"] = CONFIG_STATUS.DATABASE
         _config["db"] = _db_config
         _dump_config(_config)
         return
-    
+
     def _sqlite(self, _request):
         _db_file_path = _request.get(SQL.SQLITE.lower())
         if _db_file_path == None:
             logging.error("%s not in %s" % (SQL.SQLITE.lower(), str(_request)))
             return _return(self, -1)
-        
+
         _db_file_path = _db_file_path.get("db_file_path")
         if _db_file_path == None or len(_db_file_path) == 0:
             logging.error("db_file_path is required for sqlite")
             return _return(self, -1)
-        
+
         try:
             _dir = os.path.dirname(_db_file_path)
             _mkdir_p(_dir)
@@ -200,7 +200,7 @@ class DatabaseHandler(tornado.web.RequestHandler):
         except:
             logging.error("sqlite: can not create %s" % _db_file_path)
             return _return(self, -1)
-        
+
         _config = {
             "type": SQL.SQLITE.lower(),
             "sqlite": {
@@ -215,9 +215,9 @@ class DatabaseHandler(tornado.web.RequestHandler):
 
     def _mysql(self, _request):
         logging.info(_request)
-        _request = _request.get(SQL.MYSQL.lower()) 
+        _request = _request.get(SQL.MYSQL.lower())
         logging.info(_request)
-        
+
         _db_name = _request.get("db_name")
         _db_host = _request.get("db_host")
         _db_port = _request.get("db_port")
@@ -244,13 +244,13 @@ class DatabaseHandler(tornado.web.RequestHandler):
             if create_mysql_tables(_config):
                 self._dump_db_config(_config)
                 return _return(self, 0)
-        
+
         return _return(self, -1)
 
     def _pgsql(self, _request):
 
         _request = _request.get(SQL.PGSQL.lower())
-        
+
         _db_name = _request.get("db_name")
         _db_host = _request.get("db_host")
         _db_port = _request.get("db_port")
@@ -277,10 +277,10 @@ class DatabaseHandler(tornado.web.RequestHandler):
             if create_pgsql_tables(_config):
                 self._dump_db_config(_config)
                 return _return(self, 0)
-        
+
         return _return(self, -1)
-    
-    def post(self, id=None):        
+
+    def post(self, id=None):
         _request = json.loads(self.request.body.decode("utf-8"))
 
         _config = _get_config()
@@ -293,7 +293,7 @@ class DatabaseHandler(tornado.web.RequestHandler):
         if _type == None or len(_type) == 0:
             logging.error("type is required.")
             return _return(self, -1)
-        
+
         _type = _type.upper()
         if _type == SQL.SQLITE:
             return self._sqlite(_db)
@@ -309,7 +309,7 @@ class FirstHandler(tornado.web.RequestHandler):
         self._user_uuid = str(uuid.uuid1())
         self._app_uuid = str(uuid.uuid1())
         super(self.__class__, self).__init__(*args, **kwargs)
-        
+
     def _check_request(self, _request):
         if _request.get("user_fullname") == None or \
            _request.get("user_email") == None or \
@@ -321,14 +321,14 @@ class FirstHandler(tornado.web.RequestHandler):
 
     def _create_user(self, _request):
         from ppmessage.db.models import DeviceUser
-        
+
         _user_email = _request.get("user_email")
         _user_fullname = _request.get("user_fullname")
         _user_password = _request.get("user_password")
         _user_icon = random_identicon(_user_email)
 
         IOLoop.current().spawn_callback(download_random_identicon, _user_icon)
-        
+
         _row = DeviceUser(
             uuid=self._user_uuid,
             user_email=_user_email,
@@ -341,7 +341,7 @@ class FirstHandler(tornado.web.RequestHandler):
             is_service_user=True,
             is_anonymous_user=False
         )
-        
+
         _row.create_redis_keys(self.application.redis)
         _insert_into(_row)
         self._user_fullname = _user_fullname
@@ -349,13 +349,13 @@ class FirstHandler(tornado.web.RequestHandler):
 
     def _create_team(self, _request):
         from ppmessage.db.models import AppInfo
-        
+
         _app_name = _request.get("team_name")
         _app_uuid = self._app_uuid
         _app_key = str(uuid.uuid1())
         _app_secret = str(uuid.uuid1())
 
-        _row = AppInfo(uuid=_app_uuid, 
+        _row = AppInfo(uuid=_app_uuid,
                        app_name=_app_name,
                        app_key=_app_key,
                        app_secret=_app_secret)
@@ -398,7 +398,7 @@ class FirstHandler(tornado.web.RequestHandler):
         }
         self._api = _config
         return True
-    
+
     def _dist_ppcom(self, _request):
         from ppmessage.ppcom.config.config import config
         _d = {
@@ -412,14 +412,23 @@ class FirstHandler(tornado.web.RequestHandler):
         return True
 
     def _dist_ppkefu(self, _request):
-        from ppmessage.ppkefu.config.config import config
         _d = {
             "key": self._api.get(API_LEVEL.PPKEFU.lower()).get("key"),
             "server_url": _get_config().get("server").get("url")
         }
-        config(_d)
-        return True
+        dirname = os.path.dirname(os.path.abspath(__file__))
+        src_head_js = dirname + "/../ppkefu/src/js/head.js"
+        dist_head_js = dirname + "/../ppkefu/dist/js/head.js"
 
+        with open(src_head_js, 'r') as f:
+            content = f.read()
+            content = content.replace("{{api_key}}", _d.get("key"))
+            content = content.replace("{{server_url}}", _d.get("server_url"))
+
+        with open(dist_head_js, 'w') as f:
+            f.write(content)
+
+        return True
 
     def _dist(self, _request):
         if not self._dist_ppcom(_request):
@@ -450,7 +459,7 @@ class FirstHandler(tornado.web.RequestHandler):
         _request = json.loads(self.request.body.decode("utf-8"))
 
         logging.info("firstrequest: %s" % _request)
-        
+
         if not self._check_request(_request):
             return _return(self, -1)
 
@@ -470,7 +479,7 @@ class FirstHandler(tornado.web.RequestHandler):
 
         return _return(self, 0)
 
-class RestartHandler(tornado.web.RequestHandler):    
+class RestartHandler(tornado.web.RequestHandler):
     def _dump_restart_config(self):
         _config = _get_config()
         _config["config_status"] = CONFIG_STATUS.RESTART
@@ -480,8 +489,8 @@ class RestartHandler(tornado.web.RequestHandler):
     def _restart(self):
         from ppmessage.core.utils.restart import restart
         return restart("main.py")
-        
-    def post(self, id=None):        
+
+    def post(self, id=None):
         _request = json.loads(self.request.body.decode("utf-8"))
 
         _config = _get_config()
@@ -492,7 +501,7 @@ class RestartHandler(tornado.web.RequestHandler):
         if _request.get("user_password") != _config.get("user").get("user_password"):
             logging.error("can not restart PPMessage for user_password not match.")
             return _return(self, -1)
-        
+
         self._dump_restart_config()
         _return(self, 0)
         self._restart()
@@ -503,7 +512,7 @@ class PPConfigDelegate():
         return
     def run_periodic(self):
         return
-        
+
 class PPConfigWebService(AbstractWebService):
 
     @classmethod
@@ -515,7 +524,7 @@ class PPConfigWebService(AbstractWebService):
         _a_settings = {
             "path": os.path.join(os.path.dirname(__file__), "../resource/assets/ppconfig/static"),
         }
-        
+
         handlers=[
             (r"/", PPConfigHandler),
             (r"/status", ConfigStatusHandler),
@@ -533,7 +542,7 @@ class PPConfigWebService(AbstractWebService):
         return PPConfigDelegate(app)
 
 class PPConfigApp(tornado.web.Application):
-    
+
     def __init__(self):
         self.redis = redis.Redis(REDIS_HOST, REDIS_PORT, db=1)
         settings = {
@@ -545,4 +554,4 @@ class PPConfigApp(tornado.web.Application):
     def get_delegate(self, name):
         return PPConfigDelegate(self)
 
-    
+

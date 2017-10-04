@@ -33,7 +33,7 @@ import tornado.web
 
 class MainHandler(tornado.web.RequestHandler):
     def get(self):
-        _index = os.path.join(os.path.dirname(__file__), "../resource/html/ppkefu-index.html")
+        _index = os.path.join(os.path.dirname(__file__), "../ppkefu/index.html")
         with open(_index) as _file:
             _str = _file.read()
             self.write(_str)
@@ -47,7 +47,7 @@ class UploadHandler(tornado.web.RequestHandler):
         if _upload_type is None:
             logging.error("No upload_type set.")
             return
-        
+
         if _upload_type == "file":
             _list = self.request.files.get("file")
             if _list is None or len(_list) == 0:
@@ -88,7 +88,7 @@ class UploadHandler(tornado.web.RequestHandler):
         _new_name = str(uuid.uuid1())
 
         _generic_store = get_config_server_generic_store()
-        
+
         _new_path = _generic_store + os.path.sep + _new_name
         with open(_new_path, "wb") as _new_file:
             _new_file.write(_file_body)
@@ -105,11 +105,11 @@ class UploadHandler(tornado.web.RequestHandler):
             "file_hash": _file_sha1,
             "file_path": _new_path
         }
-        
+
         _row = FileInfo(**_values)
         _row.create_redis_keys(self.application.redis)
         _row.async_add(self.application.redis)
-                
+
         _r = {}
         _r["fid"] = _new_name
         _r["mime"] = _file_mime
@@ -124,7 +124,7 @@ class PPKefuDelegate():
         return
     def run_periodic(self):
         return
-    
+
 class PPKefuWebService(AbstractWebService):
 
     @classmethod
@@ -134,19 +134,19 @@ class PPKefuWebService(AbstractWebService):
     @classmethod
     def get_handlers(cls):
 
-        _root = os.path.join(os.path.dirname(__file__), "../resource/assets/ppkefu/assets")
+        _root = os.path.join(os.path.dirname(__file__), "../ppkefu/dist")
         _generic_store = get_config_server_generic_store()
         if _generic_store == None:
             logging.error("PPKefu not run for PPMessage not configed")
             return []
-        
+
         handlers = [
             (r"/", MainHandler),
             (r"/js/(.*)", tornado.web.StaticFileHandler, {"path": _root + "/js"}),
             (r"/css/(.*)", tornado.web.StaticFileHandler, {"path": _root + "/css"}),
             (r"/fonts/(.*)", tornado.web.StaticFileHandler, {"path": _root + "/fonts"}),
             (r"/img/(.*)", tornado.web.StaticFileHandler, {"path": _root + "/img"}),
-            
+
             (r"/download/(.*)", DownloadHandler, {"path": "/"}),
             (r"/icon/([^\/]+)?$", tornado.web.StaticFileHandler, {"path": _generic_store + os.path.sep}),
             (r"/material/([^\/]+)?$", MaterialFileHandler, {"path": _generic_store + os.path.sep}),
@@ -159,7 +159,7 @@ class PPKefuWebService(AbstractWebService):
         return PPKefuDelegate(app)
 
 class PPKefuApp(tornado.web.Application):
-    
+
     def __init__(self):
         settings = {}
         settings["debug"] = True
