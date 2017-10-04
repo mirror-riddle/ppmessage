@@ -20,11 +20,6 @@ gulp.task("lib-js", generate_lib_js);
 gulp.task("copy-jcrop-gif", copy_jcrop_gif);
 gulp.task("copy-ionic-fonts", copy_ionic_fonts);
 gulp.task("template-cache", generate_template_cache);
-
-gulp.task("watch-js", ["js"], function () {
-    childProcess.exec("python ../config/config.py");
-});
-
 gulp.task("default", [
     "scss",
     "lib-css",
@@ -38,9 +33,14 @@ gulp.task("default", [
 gulp.task("watch", ["default"], function() {
     gulp.watch(buildConfig.scss, ["scss"]);
     gulp.watch(buildConfig.css, ["lib-css"]);
-    gulp.watch(buildConfig.js, ["watch-js"]);
+    gulp.watch(buildConfig.js, ["js"]);
     gulp.watch(buildConfig.html, ["template-cache"]);
 });
+
+function generate_config(done) {
+    childProcess.exec("python ../config/config.py");
+    done();
+}
 
 function generate_template_cache(done) {
     var src = buildConfig.html;
@@ -77,7 +77,9 @@ function generate_js(done) {
         })
         .pipe(rename({"extname": ".min.js"}))
         .pipe(gulp.dest(dest))
-        .on("end", done);
+        .on("end", function() {
+            generate_config(done);
+        });
 }
 
 function generate_scss(done) {
@@ -100,6 +102,7 @@ function generate_lib_js(done) {
     gulp.src(src)
         .pipe(concat("lib.js"))
         .pipe(gulp.dest(buildConfig.halfBuildPath))
+        .pipe(uglify())
         .on("error", function(e) {
             console.log(e);
             done();
